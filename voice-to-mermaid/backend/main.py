@@ -60,14 +60,19 @@ WHISPER_LANG = os.environ.get("WHISPER_LANG", "en")
 PROMPT_PATH = Path(os.environ.get("MERMAID_PROMPT_PATH", "prompts/mermaid.txt"))
 LOG_DIR = Path(os.environ.get("LOG_DIR", "data/logs"))
 
-OLLAMA_MODELS = [
-    {"id": "qwen3:8b", "label": "qwen3:8b", "vram_gb": 5, "notes": "Recommended — thinking, fast"},
-    {"id": "qwen3.5:27b", "label": "qwen3.5:27b", "vram_gb": 17, "notes": "Thinking, best quality"},
-    {"id": "qwen3:14b", "label": "qwen3:14b", "vram_gb": 10, "notes": "Thinking, balanced"},
-    {"id": "qwen2.5:14b", "label": "qwen2.5:14b", "vram_gb": 9, "notes": "No thinking"},
-    {"id": "qwen2.5:7b", "label": "qwen2.5:7b", "vram_gb": 5, "notes": "No thinking, fast"},
-    {"id": "llama3.2:3b", "label": "llama3.2:3b", "vram_gb": 2, "notes": "No thinking, very fast"},
-]
+_ollama_models_cache: list[dict] | None = None
+
+
+async def _fetch_ollama_models() -> list[dict]:
+    """Fetch installed models from Ollama /api/tags. Returns [] if unreachable."""
+    try:
+        async with httpx.AsyncClient(timeout=5.0) as client:
+            resp = await client.get(f"{OLLAMA_URL}/api/tags")
+            resp.raise_for_status()
+            data = resp.json()
+            return [{"id": m["name"], "label": m["name"]} for m in data.get("models", [])]
+    except Exception:
+        return []
 
 # ── Generation logger — JSONL ─────────────────────────────────────────────────
 
@@ -271,14 +276,24 @@ async def health():
 
 @app.get("/v1/config")
 async def config():
+    global _ollama_models_cache
+    if _ollama_models_cache is None:
+        _ollama_models_cache = await _fetch_ollama_models()
     return {
         "ollama_url": OLLAMA_URL,
         "ollama_model": OLLAMA_MODEL,
-        "ollama_models": OLLAMA_MODELS,
+        "ollama_models": _ollama_models_cache,
         "openai_model": OPENAI_MODEL,
         "stt_enabled": WHISPER_ENABLED,
         "whisper_model": WHISPER_MODEL if WHISPER_ENABLED else None,
     }
+
+
+@app.post("/v1/models/refresh")
+async def refresh_models():
+    global _ollama_models_cache
+    _ollama_models_cache = await _fetch_ollama_models()
+    return {"ollama_models": _ollama_models_cache}
 
 
 # ── WebSocket — streaming pipeline ───────────────────────────────────────────
