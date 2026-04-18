@@ -1,0 +1,88 @@
+name: Safety Checks
+
+on:
+  push:
+    branches: [main, master, develop]
+  pull_request:
+    branches: [main, master]
+
+jobs:
+  safety-check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Check for forbidden paths in git
+        run: |
+          echo "Checking for forbidden paths..."
+          FORBIDDEN=$(git ls-files | grep -E "(^|/)(node_modules|\.next|__pycache__|dist|\.venv)(/|$)" || true)
+          if [ -n "$FORBIDDEN" ]; then
+            echo "❌ ERROR: Forbidden paths found in git:"
+            echo "$FORBIDDEN"
+            exit 1
+          fi
+          echo "✅ No forbidden paths"
+
+      - name: Check for .env files
+        run: |
+          echo "Checking for .env files..."
+          ENV_FILES=$(git ls-files | grep -E "\.env$|\.env\.[a-zA-Z0-9]+$" | grep -v ".example" || true)
+          if [ -n "$ENV_FILES" ]; then
+            echo "❌ ERROR: .env files found in git:"
+            echo "$ENV_FILES"
+            exit 1
+          fi
+          echo "✅ No .env files"
+
+      - name: Check for secret files
+        run: |
+          echo "Checking for secret files..."
+          SECRET_FILES=$(git ls-files | grep -E "\.(pem|key|crt)$|^.secrets/|^secrets/|^credentials/" || true)
+          if [ -n "$SECRET_FILES" ]; then
+            echo "❌ ERROR: Secret files found in git:"
+            echo "$SECRET_FILES"
+            exit 1
+          fi
+          echo "✅ No secret files"
+
+      - name: Check for Discord tokens
+        run: |
+          echo "Checking for Discord tokens..."
+          DISCORD=$(grep -rnE "MT[a-zA-Z0-9]{20,}\.[a-zA-Z0-9_-]{6}\.[a-zA-Z0-9_-]{27}" \
+            --include="*.py" --include="*.ts" --include="*.js" \
+            . 2>/dev/null || true)
+          if [ -n "$DISCORD" ]; then
+            echo "❌ ERROR: Discord tokens found:"
+            echo "$DISCORD"
+            exit 1
+          fi
+          echo "✅ No Discord tokens"
+
+      - name: Check for API keys
+        run: |
+          echo "Checking for API keys..."
+          API_KEYS=$(grep -rnE "(sk-[a-zA-Z0-9]{20,}|xox[baprs]-[0-9]{10,}-[0-9]{10,}-[a-zA-Z0-9]{20,}|ghp_[a-zA-Z0-9]{36,})" \
+            --include="*.py" --include="*.ts" --include="*.js" \
+            . 2>/dev/null | grep -v ".example" || true)
+          if [ -n "$API_KEYS" ]; then
+            echo "❌ ERROR: API keys found:"
+            echo "$API_KEYS"
+            exit 1
+          fi
+          echo "✅ No API keys"
+
+      - name: Check for large files
+        run: |
+          echo "Checking for large files (>1MB)..."
+          LARGE=$(find . -type f -size +1M \
+            -not -path "./node_modules/*" \
+            -not -path "./.next/*" \
+            -not -path "./.git/*" \
+            -not -path "./.venv/*" 2>/dev/null | head -10 || true)
+          if [ -n "$LARGE" ]; then
+            echo "⚠️ WARNING: Large files found:"
+            echo "$LARGE"
+          fi
+          echo "✅ Large file check complete"

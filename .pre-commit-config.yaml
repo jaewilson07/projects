@@ -1,0 +1,64 @@
+# Pre-commit hooks for projects repo
+# Install: pip install pre-commit && pre-commit install
+# Run all: pre-commit run --all-files
+
+repos:
+  # ============================================
+  # BLOCKING HOOKS
+  # ============================================
+
+  - repo: local
+    hooks:
+      - id: block-env-files
+        name: Block .env files
+        entry: 'env files are blocked - use .env.example instead'
+        language: fail
+        files: '\.env$|\.env\.[a-zA-Z0-9]+$'
+        exclude: '\.env\.example$|\.env\..*\.example$'
+
+      - id: block-secret-files
+        name: Block secret files
+        entry: 'secret/key/pem files are blocked'
+        language: fail
+        files: '\.(pem|key|crt)$|^.secrets/|^secrets/|^credentials/'
+
+      - id: block-forbidden-paths
+        name: Block forbidden paths (node_modules, .next, __pycache__, dist)
+        entry: >-
+          bash -c 'for f in "$@"; do if [[ "$f" == *"node_modules"* ]] || [[ "$f" == *".next"* ]] || [[ "$f" == *"__pycache__"* ]] || [[ "$f" == *"/dist/"* ]] || [[ "$f" == *".venv"* ]]; then echo "BLOCKED:$f - Remove from staging"; exit 1; fi; done; exit 0' --
+        language: system
+        pass_filenames: true
+
+      - id: block-api-keys
+        name: Block API keys in code
+        entry: '(sk-[a-zA-Z0-9]{20,}|xox[baprs]-[0-9]{10,}-[0-9]{10,}-[a-zA-Z0-9]{20,}|ghp_[a-zA-Z0-9]{36,})'
+        language: pygrep
+        types: [text]
+        exclude: '\.example$|\.md$|\.pre-commit-config\.yaml$'
+
+  # ============================================
+  # STANDARD HOOKS
+  # ============================================
+
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v5.0.0
+    hooks:
+      - id: check-added-large-files
+        args: ['--maxkb=1000']
+      - id: check-yaml
+      - id: check-json
+      - id: check-toml
+      - id: end-of-file-fixer
+      - id: trailing-whitespace
+      - id: check-merge-conflict
+      - id: check-case-conflict
+      - id: detect-private-key
+      - id: mixed-line-ending
+        args: ['--fix=lf']
+
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.8.0
+    hooks:
+      - id: ruff
+        args: ['--fix']
+      - id: ruff-format

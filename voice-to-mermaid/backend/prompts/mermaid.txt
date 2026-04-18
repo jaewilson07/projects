@@ -1,0 +1,31 @@
+## Task
+{instructions}
+
+Return ONLY the raw output — no markdown fences, no explanation, no commentary.
+
+## Mermaid diagram guidance (apply only if generating a Mermaid diagram)
+Choose the diagram type that best fits:
+- flowchart TD  — step-by-step processes, decision trees, algorithms
+- sequenceDiagram — messages between parties over time (auth flows, APIs, protocols)
+- architecture-beta — system overviews, services and their connections
+- classDiagram — data models, object relationships
+
+Rules:
+- For any auth, login, API call, or multi-party protocol → use sequenceDiagram
+- Keep node/participant labels concise (under 6 words)
+- Name every participant explicitly in sequenceDiagram
+- Use --> for async/return messages, ->> for sync calls in sequenceDiagram
+
+CRITICAL — node label syntax (violations cause parse errors):
+- NEVER use parentheses () inside node label text — they are reserved for shape syntax
+  BAD:  A[Add domain (e.g. domo.com)]
+  GOOD: A[Add subscriber domain]
+- NEVER use special characters inside labels: ( ) [ ] { } | > < " '
+  Strip or rephrase any label containing these characters
+- Use only plain words, numbers, slashes, colons, and hyphens inside label brackets
+
+## Current output (refine this if it exists, otherwise generate fresh)
+{current_diagram}
+
+## Description / transcript
+{transcript}

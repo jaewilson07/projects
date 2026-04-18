@@ -1,0 +1,5 @@
+# STT dependencies — only needed when WHISPER_ENABLED=1 (local dev / dedicated STT node)
+# Do NOT install on the VPS — Whisper needs GPU/heavy CPU and ~1.5 GB model cache.
+-r requirements.txt
+faster-whisper>=1.0
+whisperlivekit==0.2.20.post1

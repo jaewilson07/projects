@@ -1,0 +1,32 @@
+services:
+  ollama:
+    image: ollama/ollama:latest
+    container_name: vtm-ollama
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama-data:/root/.ollama
+    # GPU support — remove 'deploy' block if no GPU available
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
+
+  api:
+    build: .
+    container_name: vtm-api
+    ports:
+      - "${PORT:-7625}:7625"
+    env_file: .env
+    environment:
+      - OLLAMA_URL=http://ollama:11434
+    depends_on:
+      - ollama
+    volumes:
+      - ./prompts:/app/prompts   # mount prompts so edits don't need rebuild
+
+volumes:
+  ollama-data:

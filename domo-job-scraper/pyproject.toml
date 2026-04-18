@@ -1,0 +1,25 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "domo-job-scraper"
+version = "0.1.0"
+description = "Daily Domo job postings scraper — runs via .github/workflows/job-search.yml and posts to Slack."
+requires-python = ">=3.11"
+dependencies = [
+    "python-jobspy>=1.1.82",
+    "slack-sdk>=3.27.0",
+    "pydantic>=2.0",
+    "pydantic-settings>=2.0",
+]
+
+[project.scripts]
+domo-job-scraper = "job_search.__main__:main"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/job_search"]
+
+[tool.pytest.ini_options]
+pythonpath = ["src"]
+testpaths = ["tests"]
