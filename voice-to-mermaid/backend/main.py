@@ -459,8 +459,9 @@ async def ws_mermaid(websocket: WebSocket):
             await audio_processor.process_audio(b"")
             if results_task and not results_task.done():
                 results_task.cancel()
-            try:
-                await results_task
-            except asyncio.CancelledError:
-                pass
+            if results_task:
+                try:
+                    await results_task
+                except asyncio.CancelledError:
+                    pass
             await audio_processor.cleanup()
