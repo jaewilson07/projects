@@ -123,7 +123,7 @@ For a public deployment with a private backend:
 ## Architecture
 
 ```
-libraries/web-apps/voice-to-mermaid/
+voice-to-mermaid/                    (jaewilson07/projects repo)
 ├── README.md
 ├── backend/
 │   ├── main.py              FastAPI app — zero external deps
