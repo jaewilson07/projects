@@ -62,15 +62,37 @@ LOG_DIR = Path(os.environ.get("LOG_DIR", "data/logs"))
 
 _ollama_models_cache: list[dict] | None = None
 
+# config.yaml lives next to this file in source; /app/config.yaml in Docker
+_CONFIG_PATH = Path(__file__).parent / "config.yaml"
+
+
+def _load_model_filter() -> list[str]:
+    try:
+        import yaml  # type: ignore[import-untyped]
+
+        raw = yaml.safe_load(_CONFIG_PATH.read_text()) or {}
+        return [str(p) for p in (raw.get("ollama", {}).get("model_filter") or [])]
+    except FileNotFoundError:
+        return []
+    except Exception as exc:
+        log.warning("Failed to load config.yaml: %s", exc)
+        return []
+
+
+_MODEL_FILTER: list[str] = _load_model_filter()
+
 
 async def _fetch_ollama_models() -> list[dict]:
-    """Fetch installed models from Ollama /api/tags. Returns [] if unreachable."""
+    """Fetch installed models from Ollama /api/tags, optionally filtered by prefix."""
     try:
         async with httpx.AsyncClient(timeout=5.0) as client:
             resp = await client.get(f"{OLLAMA_URL}/api/tags")
             resp.raise_for_status()
             data = resp.json()
-            return [{"id": m["name"], "label": m["name"]} for m in data.get("models", [])]
+            models = data.get("models", [])
+            if _MODEL_FILTER:
+                models = [m for m in models if any(m["name"].startswith(p) for p in _MODEL_FILTER)]
+            return [{"id": m["name"], "label": m["name"]} for m in models]
     except Exception:
         return []
 

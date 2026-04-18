@@ -1,0 +1,11 @@
+# voice-to-mermaid backend — non-sensitive app config
+# Volume-mounted in Docker; edit without rebuilding.
+#
+# Secrets (OLLAMA_URL, API_KEY, etc.) stay in .env / Infisical.
+
+ollama:
+  # Models shown in the UI picker — exact names or prefixes (e.g. "qwen2.5:").
+  # Leave empty to show all installed models.
+  model_filter:
+    - "qwen2.5:14b"
+    - "qwen3.5:27b"

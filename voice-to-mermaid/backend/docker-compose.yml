@@ -26,7 +26,8 @@ services:
     depends_on:
       - ollama
     volumes:
-      - ./prompts:/app/prompts   # mount prompts so edits don't need rebuild
+      - ./prompts:/app/prompts       # mount prompts so edits don't need rebuild
+      - ./config.yaml:/app/config.yaml  # mount config so edits don't need rebuild
 
 volumes:
   ollama-data:
