@@ -56,7 +56,11 @@ _CONFIG_PATH = Path(__file__).parent / "config.yaml"
 def _load_config() -> dict:
     try:
         import yaml  # type: ignore[import-untyped]
-        return yaml.safe_load(_CONFIG_PATH.read_text()) or {}
+        raw = yaml.safe_load(_CONFIG_PATH.read_text())
+        if not isinstance(raw, dict):
+            log.warning("config.yaml is not a mapping — using defaults")
+            return {}
+        return raw
     except FileNotFoundError:
         log.warning("config.yaml not found — using defaults")
         return {}
@@ -72,9 +76,9 @@ OLLAMA_URL = os.environ.get("OLLAMA_URL", "http://localhost:11434").rstrip("/")
 OPENAI_URL = os.environ.get("OPENAI_BASE_URL", "").rstrip("/")
 OPENAI_KEY = os.environ.get("OPENAI_API_KEY", "")
 
-# Settings — config.yaml (env var override still works if needed)
-OLLAMA_MODEL = os.environ.get("OLLAMA_MODEL") or _cfg.get("ollama", {}).get("default_model", "qwen3:8b")
-OPENAI_MODEL = os.environ.get("OPENAI_MODEL") or _cfg.get("openai", {}).get("model", "gpt-4o-mini")
+# Settings — config.yaml only; edit config.yaml to change these
+OLLAMA_MODEL = _cfg.get("ollama", {}).get("default_model", "qwen3:8b")
+OPENAI_MODEL = _cfg.get("openai", {}).get("model", "gpt-4o-mini")
 WHISPER_ENABLED = _cfg.get("whisper", {}).get("enabled", False)
 WHISPER_MODEL = _cfg.get("whisper", {}).get("model", "medium.en")
 WHISPER_LANG = _cfg.get("whisper", {}).get("language", "en")
@@ -252,15 +256,20 @@ async def _lifespan(app: FastAPI):
     global _transcription_engine
     _init_log_file()
     if WHISPER_ENABLED:
-        from whisperlivekit import TranscriptionEngine
-        from whisperlivekit.config import WhisperLiveKitConfig
+        try:
+            from whisperlivekit import TranscriptionEngine
+            from whisperlivekit.config import WhisperLiveKitConfig
+        except ImportError:
+            log.warning("whisper.enabled=true but whisperlivekit not installed — STT disabled. Install requirements.stt.txt to enable.")
+            yield
+            return
 
-        log.info("Loading WhisperLiveKit  model=%s  lang=%s", WHISPER_MODEL, WHISPER_LANG)
+        log.info("Loading WhisperLiveKit  model=%s  lang=%s  device=%s", WHISPER_MODEL, WHISPER_LANG, WHISPER_DEVICE)
         _transcription_engine = TranscriptionEngine(
             config=WhisperLiveKitConfig(
                 model_size=WHISPER_MODEL,
                 lan=WHISPER_LANG,
-                backend="auto",
+                backend=WHISPER_DEVICE,
                 backend_policy="simulstreaming",
                 vad=True,
                 vac=False,
@@ -272,7 +281,7 @@ async def _lifespan(app: FastAPI):
         )
         log.info("WhisperLiveKit ready")
     else:
-        log.info("STT disabled (WHISPER_ENABLED=0) — audio transcription unavailable")
+        log.info("STT disabled (whisper.enabled=false) — audio transcription unavailable")
     yield
     log.info("Server shutting down")
 

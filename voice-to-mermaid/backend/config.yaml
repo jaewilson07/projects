@@ -18,10 +18,10 @@ openai:
   model: "gpt-4o-mini"
 
 whisper:
-  enabled: true
+  enabled: false   # set true only when requirements.stt.txt deps are installed
   model: "medium.en"
   language: "en"
-  device: "auto"   # "auto", "cuda", "cpu"
+  device: "auto"   # "auto", "cuda", "cpu" — maps to WhisperLiveKitConfig backend
 
 paths:
   prompt: "prompts/mermaid.txt"
