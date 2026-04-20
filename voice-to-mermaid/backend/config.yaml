@@ -1,11 +1,28 @@
 # voice-to-mermaid backend — non-sensitive app config
-# Volume-mounted in Docker; edit without rebuilding.
+# Volume-mounted in Docker; edit here without rebuilding.
 #
-# Secrets (OLLAMA_URL, API_KEY, etc.) stay in .env / Infisical.
+# Secrets (OLLAMA_URL, OPENAI_API_KEY, etc.) stay in .env / Infisical.
 
 ollama:
+  default_model: "qwen3:8b"
   # Models shown in the UI picker — exact names or prefixes (e.g. "qwen2.5:").
   # Leave empty to show all installed models.
   model_filter:
     - "qwen2.5:14b"
     - "qwen3.5:27b"
+    - "qwen3:8b"
+    - "qwen3:14b"
+    - "llama3.2:3b"
+
+openai:
+  model: "gpt-4o-mini"
+
+whisper:
+  enabled: false   # set true only when requirements.stt.txt deps are installed
+  model: "medium.en"
+  language: "en"
+  device: "auto"   # "auto", "cuda", "cpu" — maps to WhisperLiveKitConfig backend
+
+paths:
+  prompt: "prompts/mermaid.txt"
+  log_dir: "data/logs"
