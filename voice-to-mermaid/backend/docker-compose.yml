@@ -2,6 +2,7 @@ services:
   ollama:
     image: ollama/ollama:latest
     container_name: vtm-ollama
+    restart: unless-stopped
     ports:
       - "11434:11434"
     volumes:
@@ -18,6 +19,7 @@ services:
   api:
     build: .
     container_name: vtm-api
+    restart: unless-stopped
     ports:
       - "${PORT:-7625}:7625"
     env_file: .env
