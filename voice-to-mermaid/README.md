@@ -78,7 +78,7 @@ It is volume-mounted in Docker, so changes take effect on restart without rebuil
 | `ollama.default_model` | `qwen3:8b` | Ollama model for diagram generation |
 | `ollama.model_filter` | _(list)_ | Model name prefixes shown in the UI picker |
 | `openai.model` | `gpt-4o-mini` | OpenAI-compatible model name |
-| `whisper.enabled` | `false` | Set `true` after installing `requirements.stt.txt` |
+| `whisper.enabled` | `false` | Set `true` after installing `requirements.stt.txt`; graceful no-op if import fails |
 | `whisper.model` | `medium.en` | Whisper model size |
 | `whisper.device` | `auto` | `auto` / `cpu` / `cuda` |
 | `paths.prompt` | `prompts/mermaid.txt` | Path to LLM prompt template |
@@ -88,7 +88,7 @@ It is volume-mounted in Docker, so changes take effect on restart without rebuil
 
 | Variable | Default | Description |
 |---|---|---|
-| `OLLAMA_URL` | `http://localhost:11434` | Ollama server URL |
+| `OLLAMA_URL` | `http://ollama:11434` (Docker Compose) | Ollama server URL; use `http://host.docker.internal:11434` for a host-resident Ollama |
 | `OPENAI_BASE_URL` | _(empty)_ | OpenAI-compatible API base (optional) |
 | `OPENAI_API_KEY` | _(empty)_ | API key for OpenAI-compatible API |
 | `API_KEY` | _(empty)_ | If set, require `X-Api-Key` header on all requests |

@@ -357,7 +357,7 @@ async def refresh_models():
 
 @app.websocket("/ws/mermaid")
 async def ws_mermaid(websocket: WebSocket):
-    if WHISPER_ENABLED:
+    if _stt_available:
         from whisperlivekit import AudioProcessor
 
     await websocket.accept()
@@ -447,7 +447,7 @@ async def ws_mermaid(websocket: WebSocket):
 
     # Handshake
     await websocket.send_json({"type": "config", "useAudioWorklet": False})
-    ready_msg = "Ready — speak now…" if WHISPER_ENABLED else "Ready — type or paste text to generate a diagram"
+    ready_msg = "Ready — speak now…" if _stt_available else "Ready — type or paste text to generate a diagram"
     await websocket.send_json({"type": "processing", "message": ready_msg})
 
     transcript_lines: list[str] = []
@@ -455,7 +455,7 @@ async def ws_mermaid(websocket: WebSocket):
     results_task = None
     line_count_ref = [0]
 
-    if WHISPER_ENABLED:
+    if _stt_available:
         audio_processor = AudioProcessor(transcription_engine=_transcription_engine)
         results_generator = await audio_processor.create_tasks()
         results_task = asyncio.create_task(_consume_results(results_generator, line_count_ref))
@@ -518,7 +518,7 @@ async def ws_mermaid(websocket: WebSocket):
                     pass
                 continue
 
-            if WHISPER_ENABLED and audio_processor:
+            if _stt_available and audio_processor:
                 audio_bytes = msg.get("bytes")
                 if audio_bytes:
                     await audio_processor.process_audio(audio_bytes)

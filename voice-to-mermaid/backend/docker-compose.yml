@@ -24,9 +24,11 @@ services:
       - "${PORT:-7625}:7625"
     env_file: .env
     environment:
-      - OLLAMA_URL=http://ollama:11434
-    depends_on:
-      - ollama
+      # Default to the bundled ollama service; override in .env to use a
+      # host-resident Ollama (http://host.docker.internal:11434) instead.
+      OLLAMA_URL: ${OLLAMA_URL:-http://ollama:11434}
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     volumes:
       - ./prompts:/app/prompts       # mount prompts so edits don't need rebuild
       - ./config.yaml:/app/config.yaml  # mount config so edits don't need rebuild
