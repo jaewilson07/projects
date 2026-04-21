@@ -23,8 +23,10 @@ services:
     ports:
       - "${PORT:-7625}:7625"
     env_file: .env
-    # OLLAMA_URL comes from .env — default uses bundled vtm-ollama; set to
-    # http://host.docker.internal:11434 to use a host Ollama instead.
+    environment:
+      # Default to the bundled ollama service; override in .env to use a
+      # host-resident Ollama (http://host.docker.internal:11434) instead.
+      OLLAMA_URL: ${OLLAMA_URL:-http://ollama:11434}
     extra_hosts:
       - "host.docker.internal:host-gateway"
     volumes:
