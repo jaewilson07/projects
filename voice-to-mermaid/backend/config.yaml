@@ -18,7 +18,7 @@ openai:
   model: "gpt-4o-mini"
 
 whisper:
-  enabled: false   # set true only when requirements.stt.txt deps are installed
+  enabled: true
   model: "medium.en"
   language: "en"
   device: "auto"   # "auto", "cuda", "cpu" — maps to WhisperLiveKitConfig backend
