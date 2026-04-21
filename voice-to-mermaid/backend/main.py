@@ -333,7 +333,7 @@ async def health():
 @app.get("/v1/config")
 async def config():
     global _ollama_models_cache
-    if _ollama_models_cache is None:
+    if not _ollama_models_cache:
         _ollama_models_cache = await _fetch_ollama_models()
     return {
         "ollama_url": OLLAMA_URL,
@@ -357,9 +357,6 @@ async def refresh_models():
 
 @app.websocket("/ws/mermaid")
 async def ws_mermaid(websocket: WebSocket):
-    if _stt_available:
-        from whisperlivekit import AudioProcessor
-
     await websocket.accept()
 
     llm_mode: str = "ollama"
@@ -456,6 +453,7 @@ async def ws_mermaid(websocket: WebSocket):
     line_count_ref = [0]
 
     if _stt_available:
+        from whisperlivekit import AudioProcessor
         audio_processor = AudioProcessor(transcription_engine=_transcription_engine)
         results_generator = await audio_processor.create_tasks()
         results_task = asyncio.create_task(_consume_results(results_generator, line_count_ref))

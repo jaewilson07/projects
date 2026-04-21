@@ -18,9 +18,9 @@ openai:
   model: "gpt-4o-mini"
 
 whisper:
-  # Set true only after installing requirements.stt.txt (or adding it to Dockerfile).
+  # Enabled: requirements.stt.txt is now installed in the Dockerfile.
   # If import fails, _stt_available stays False and /v1/config returns stt_enabled: false — no crash.
-  enabled: false
+  enabled: true
   model: "medium.en"
   language: "en"
   device: "auto"   # "auto", "cuda", "cpu" — maps to WhisperLiveKitConfig backend
