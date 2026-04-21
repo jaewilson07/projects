@@ -71,21 +71,39 @@ def _load_config() -> dict:
 
 _cfg = _load_config()
 
+
+def _config_section(name: str) -> dict:
+    section = _cfg.get(name, {})
+    if isinstance(section, dict):
+        return section
+    log.warning("config.%s is not a mapping — using defaults for that section", name)
+    return {}
+
+
+_ollama_cfg = _config_section("ollama")
+_openai_cfg = _config_section("openai")
+_whisper_cfg = _config_section("whisper")
+_paths_cfg = _config_section("paths")
+
 # Secrets — env only
 OLLAMA_URL = os.environ.get("OLLAMA_URL", "http://localhost:11434").rstrip("/")
 OPENAI_URL = os.environ.get("OPENAI_BASE_URL", "").rstrip("/")
 OPENAI_KEY = os.environ.get("OPENAI_API_KEY", "")
 
 # Settings — config.yaml only; edit config.yaml to change these
-OLLAMA_MODEL = _cfg.get("ollama", {}).get("default_model", "qwen3:8b")
-OPENAI_MODEL = _cfg.get("openai", {}).get("model", "gpt-4o-mini")
-WHISPER_ENABLED = _cfg.get("whisper", {}).get("enabled", False)
-WHISPER_MODEL = _cfg.get("whisper", {}).get("model", "medium.en")
-WHISPER_LANG = _cfg.get("whisper", {}).get("language", "en")
-WHISPER_DEVICE = _cfg.get("whisper", {}).get("device", "auto")
-PROMPT_PATH = Path(_cfg.get("paths", {}).get("prompt", "prompts/mermaid.txt"))
-LOG_DIR = Path(_cfg.get("paths", {}).get("log_dir", "data/logs"))
-_MODEL_FILTER: list[str] = [str(p) for p in (_cfg.get("ollama", {}).get("model_filter") or [])]
+OLLAMA_MODEL = _ollama_cfg.get("default_model", "qwen3:8b")
+OPENAI_MODEL = _openai_cfg.get("model", "gpt-4o-mini")
+WHISPER_ENABLED = _whisper_cfg.get("enabled", False)
+WHISPER_MODEL = _whisper_cfg.get("model", "medium.en")
+WHISPER_LANG = _whisper_cfg.get("language", "en")
+WHISPER_DEVICE = _whisper_cfg.get("device", "auto")
+PROMPT_PATH = Path(_paths_cfg.get("prompt", "prompts/mermaid.txt"))
+LOG_DIR = Path(_paths_cfg.get("log_dir", "data/logs"))
+_MODEL_FILTER: list[str] = [str(p) for p in (_ollama_cfg.get("model_filter") or [])]
+
+# Set True only after WhisperLiveKit loads successfully at startup.
+# WHISPER_ENABLED=True but import fails → _stt_available stays False.
+_stt_available: bool = False
 
 _ollama_models_cache: list[dict] | None = None
 
@@ -253,7 +271,7 @@ _transcription_engine = None
 
 @asynccontextmanager
 async def _lifespan(app: FastAPI):
-    global _transcription_engine
+    global _transcription_engine, _stt_available
     _init_log_file()
     if WHISPER_ENABLED:
         try:
@@ -279,6 +297,7 @@ async def _lifespan(app: FastAPI):
                 pcm_input=False,
             )
         )
+        _stt_available = True
         log.info("WhisperLiveKit ready")
     else:
         log.info("STT disabled (whisper.enabled=false) — audio transcription unavailable")
@@ -319,8 +338,8 @@ async def config():
         "ollama_model": OLLAMA_MODEL,
         "ollama_models": _ollama_models_cache,
         "openai_model": OPENAI_MODEL,
-        "stt_enabled": WHISPER_ENABLED,
-        "whisper_model": WHISPER_MODEL if WHISPER_ENABLED else None,
+        "stt_enabled": _stt_available,
+        "whisper_model": WHISPER_MODEL if _stt_available else None,
     }
 
 
