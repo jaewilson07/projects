@@ -18,7 +18,11 @@ openai:
   model: "gpt-4o-mini"
 
 whisper:
-  enabled: false   # set true only when requirements.stt.txt deps are installed
+  # true = attempt to load WhisperLiveKit at startup.
+  # If import fails (deps not installed), _stt_available stays False and
+  # /v1/config returns stt_enabled: false — no crash.
+  # Install requirements.stt.txt (or add it to Dockerfile) before setting true.
+  enabled: true
   model: "medium.en"
   language: "en"
   device: "auto"   # "auto", "cuda", "cpu" — maps to WhisperLiveKitConfig backend

@@ -66,18 +66,31 @@ WebSocket /ws/mermaid
 
 ---
 
-## Environment Variables
+## Configuration
 
-### Backend (`backend/.env`)
+### `backend/config.yaml` — non-secret settings
+
+Edit this file to change model names, Whisper settings, prompt path, and model filter.
+It is volume-mounted in Docker, so changes take effect on restart without rebuilding.
+
+| Key | Default | Description |
+|---|---|---|
+| `ollama.default_model` | `qwen3:8b` | Ollama model for diagram generation |
+| `ollama.model_filter` | _(list)_ | Model name prefixes shown in the UI picker |
+| `openai.model` | `gpt-4o-mini` | OpenAI-compatible model name |
+| `whisper.enabled` | `false` | Set `true` after installing `requirements.stt.txt` |
+| `whisper.model` | `medium.en` | Whisper model size |
+| `whisper.device` | `auto` | `auto` / `cpu` / `cuda` |
+| `paths.prompt` | `prompts/mermaid.txt` | Path to LLM prompt template |
+| `paths.log_dir` | `data/logs` | Directory for generation logs |
+
+### Backend (`backend/.env`) — secrets only
 
 | Variable | Default | Description |
 |---|---|---|
 | `OLLAMA_URL` | `http://localhost:11434` | Ollama server URL |
-| `OLLAMA_MODEL` | `qwen2.5:14b` | Model for diagram generation |
 | `OPENAI_BASE_URL` | _(empty)_ | OpenAI-compatible API base (optional) |
 | `OPENAI_API_KEY` | _(empty)_ | API key for OpenAI-compatible API |
-| `WHISPER_MODEL` | `medium` | `tiny` / `base` / `small` / `medium` / `large-v3` |
-| `WHISPER_DEVICE` | `auto` | `auto` / `cpu` / `cuda` |
 | `API_KEY` | _(empty)_ | If set, require `X-Api-Key` header on all requests |
 | `PORT` | `7625` | Server port |
 
