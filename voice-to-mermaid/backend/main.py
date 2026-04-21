@@ -72,6 +72,7 @@ def _load_config() -> dict:
 _cfg = _load_config()
 
 
+
 def _config_section(name: str) -> dict:
     section = _cfg.get(name, {})
     if isinstance(section, dict):
@@ -84,6 +85,7 @@ _ollama_cfg = _config_section("ollama")
 _openai_cfg = _config_section("openai")
 _whisper_cfg = _config_section("whisper")
 _paths_cfg = _config_section("paths")
+
 
 # Secrets — env only
 OLLAMA_URL = os.environ.get("OLLAMA_URL", "http://localhost:11434").rstrip("/")
