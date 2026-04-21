@@ -78,7 +78,7 @@ It is volume-mounted in Docker, so changes take effect on restart without rebuil
 | `ollama.default_model` | `qwen3:8b` | Ollama model for diagram generation |
 | `ollama.model_filter` | _(list)_ | Model name prefixes shown in the UI picker |
 | `openai.model` | `gpt-4o-mini` | OpenAI-compatible model name |
-| `whisper.enabled` | `false` | Set `true` after installing `requirements.stt.txt`; graceful no-op if import fails |
+| `whisper.enabled` | `true` | STT enabled by default (deps installed in Docker image); graceful no-op if import fails |
 | `whisper.model` | `medium.en` | Whisper model size |
 | `whisper.device` | `auto` | `auto` / `cpu` / `cuda` |
 | `paths.prompt` | `prompts/mermaid.txt` | Path to LLM prompt template |
