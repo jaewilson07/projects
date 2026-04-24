@@ -4,15 +4,22 @@
 # Secrets (OLLAMA_URL, OPENAI_API_KEY, etc.) stay in .env / Infisical.
 
 ollama:
+  # Default model for first-diagram generation. qwen3:8b is chosen for:
+  # - Fast first-token latency (important for "type and see diagram" UX)
+  # - Good instruction-following on mermaid grammar
+  # - Fits in 8-12 GB VRAM (cold-load ~5s, then streams)
+  # Swap to a 32B class model (qwen2.5-coder:32b, qwen3.5:27b) for complex
+  # multi-node diagrams at the cost of ~20s cold-load latency.
   default_model: "qwen3:8b"
-  # Models shown in the UI picker — exact names or prefixes (e.g. "qwen2.5:").
-  # Leave empty to show all installed models.
+  # Models shown in the UI picker. Must exist in Windows Ollama
+  # (C:\Users\jaewi\.ollama is not used — see OLLAMA_MODELS=D:\ollama\models).
+  # Update as needed with: ollama pull <model>  (run in Windows PowerShell)
   model_filter:
-    - "qwen2.5:14b"
-    - "qwen3.5:27b"
     - "qwen3:8b"
-    - "qwen3:14b"
-    - "llama3.2:3b"
+    - "qwen2.5:14b"
+    - "qwen2.5-coder:32b"
+    - "qwen3.5:27b"
+    - "gemma3:12b"
 
 openai:
   model: "gpt-4o-mini"
