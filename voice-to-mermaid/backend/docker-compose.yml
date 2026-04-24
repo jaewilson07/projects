@@ -1,21 +1,18 @@
-services:
-  ollama:
-    image: ollama/ollama:latest
-    container_name: vtm-ollama
-    restart: unless-stopped
-    ports:
-      - "11434:11434"
-    volumes:
-      - ollama-data:/root/.ollama
-    # GPU support — remove 'deploy' block if no GPU available
-    deploy:
-      resources:
-        reservations:
-          devices:
-            - driver: nvidia
-              count: 1
-              capabilities: [gpu]
+# Voice-to-Mermaid — LOCAL MACHINE ONLY (requires GPU)
+# ⚠️  GPU GUARD: This compose file requires NVIDIA GPU hardware.
+# ⚠️  DO NOT deploy to the VPS (187.77.216.108) — it has no GPU.
+# ⚠️  See infrastructure/local/README.md for local machine service registry.
 
+#
+# Architecture (as of 2026-04-24):
+#   vtm-api → http://host.docker.internal:11434 → Windows-native Ollama
+#
+# The previous `vtm-ollama` sidecar + `ollama-data` volume were removed —
+# they duplicated the Windows Ollama instance (ran empty, wasted resources).
+# See .agents/runbooks/troubleshoot-ollama/SKILL.md for the single-instance
+# architecture rules.
+#
+services:
   api:
     build: .
     container_name: vtm-api
@@ -24,14 +21,16 @@ services:
       - "${PORT:-7625}:7625"
     env_file: .env
     environment:
-      # Default to the bundled ollama service; override in .env to use a
-      # host-resident Ollama (http://host.docker.internal:11434) instead.
-      OLLAMA_URL: ${OLLAMA_URL:-http://ollama:11434}
+      # Windows-native Ollama via Docker Desktop gateway.
+      OLLAMA_URL: ${OLLAMA_URL:-http://host.docker.internal:11434}
     extra_hosts:
       - "host.docker.internal:host-gateway"
     volumes:
       - ./prompts:/app/prompts       # mount prompts so edits don't need rebuild
       - ./config.yaml:/app/config.yaml  # mount config so edits don't need rebuild
+    networks:
+      - local-ai
 
-volumes:
-  ollama-data:
+networks:
+  local-ai:
+    name: local-ai
